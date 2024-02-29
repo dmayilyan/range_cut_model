@@ -1,7 +1,7 @@
-from torch import nn
+import torch
 
 
-class DnCNN(nn.Module):
+class DnCNN(torch.nn.Module):
     def __init__(self, number_of_layers=9, kernel_size=3):
         super(DnCNN, self).__init__()
 
@@ -46,5 +46,5 @@ class DnCNN(nn.Module):
 
         self.dncnn = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
         return self.dncnn(x)

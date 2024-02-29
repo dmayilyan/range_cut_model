@@ -5,4 +5,4 @@ paths:
   data: ../ILDCaloSim
 params:
   epoch_count: 5
-  hidden_count: 6
+  hidden_count: 9
