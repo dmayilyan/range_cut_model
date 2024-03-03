@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 
 class DnCNN(torch.nn.Module):
