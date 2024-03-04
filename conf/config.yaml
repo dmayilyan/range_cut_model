@@ -6,3 +6,4 @@ paths:
 params:
   epoch_count: 5
   hidden_count: 9
+  learning_rate: 0.01

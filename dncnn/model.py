@@ -1,6 +1,10 @@
 import torch
 from torch import nn
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class DnCNN(torch.nn.Module):
     def __init__(self, number_of_layers=9, kernel_size=3):
@@ -49,3 +53,11 @@ class DnCNN(torch.nn.Module):
 
     def forward(self, x) -> torch.Tensor:
         return self.dncnn(x)
+
+
+class Loss(nn.Module):
+    def __init__(self):
+        super(Loss, self).__init__()
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor):
+        return abs(output[0] - target[0]).max()

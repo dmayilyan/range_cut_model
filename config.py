@@ -14,6 +14,7 @@ class Files:
 class Params:
     epoch_count: int
     hidden_count: int
+    learning_rate: float
 
 
 @dataclass

@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-from typing import Tuple
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ def get_device() -> str:
     return device
 
 
-def slice_to_shortest(np1, np2, axis=0) -> Tuple[np.ndarray, np.ndarray]:
+def slice_to_shortest(np1, np2, axis=0) -> tuple[np.ndarray, np.ndarray]:
     np1_shape = np1.shape
     np2_shape = np2.shape
 
