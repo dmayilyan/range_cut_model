@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 class CaloData(Dataset):
     def __init__(self, data_noisy: np.ndarray, data_sharp: np.ndarray, transform=None):
-        #  data_big = data[range_cut_big][:9989, :, :, :].copy()
-        #  data_small = data[range_cut_small].copy()
         self.data_cut_big = torch.from_numpy(np.sum(data_noisy, axis=3))
         self.data_cut_small = torch.from_numpy(np.sum(data_sharp, axis=3))
         self.transform = transform

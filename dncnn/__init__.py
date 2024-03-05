@@ -1,3 +1,3 @@
-from beartype.claw import beartype_this_package  # <-- hype comes
+from beartype.claw import beartype_this_package
 
-beartype_this_package()  # <-- hype goesp>>
+beartype_this_package()

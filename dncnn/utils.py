@@ -19,6 +19,13 @@ def slice_to_shortest(np1, np2, axis=0) -> tuple[np.ndarray, np.ndarray]:
 
     min_in_axis = min(np1_shape[axis], np2_shape[axis])
 
+    if np1_shape[axis] != np2_shape[axis]:
+        logger.warning(
+            "Input sizes mismatch!\nArrays will be sliced to %d along axis %d.",
+            min_in_axis,
+            axis,
+        )
+
     return np1.take(range(0, min_in_axis), axis=axis), np2.take(
         range(0, min_in_axis), axis=axis
     )
