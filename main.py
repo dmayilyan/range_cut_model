@@ -57,7 +57,7 @@ def main(cfg: DnCNNConfig) -> None:
             train_loss += batch_loss.item()
         train_loss = train_loss / len(data)
         training_losses[epoch] = train_loss
-        logger.info("train loss for epoch %d: %f", train_loss)
+        logger.info("train loss for epoch %d: %f", train_loss[0])
 
 
 if __name__ == "__main__":
