@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as f
 
 import logging
 
@@ -60,4 +61,4 @@ class Loss(nn.Module):
         super(Loss, self).__init__()
 
     def forward(self, output: torch.Tensor, target: torch.Tensor):
-        return abs(output[0] - target[0]).max()
+        return torch.max(f.l1_loss(output, target))

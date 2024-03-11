@@ -19,7 +19,6 @@ cs.store(name="dncnn_config", node=DnCNNConfig)
 
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DnCNNConfig) -> None:
-    print(cfg.params)
 
     device = get_device()
 
