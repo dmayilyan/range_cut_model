@@ -1,8 +1,8 @@
-import torch
-from torch import nn
-import torch.nn.functional as f
-
 import logging
+
+import torch
+import torch.nn.functional as f
+from torch import nn
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +11,7 @@ class DnCNN(torch.nn.Module):
     def __init__(self, number_of_layers=9, kernel_size=3):
         super(DnCNN, self).__init__()
 
+        # by default equals 1
         padding = int((kernel_size - 1) / 2)
         alpha = 0.2
 

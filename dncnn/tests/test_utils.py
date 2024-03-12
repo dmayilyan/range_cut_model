@@ -1,6 +1,7 @@
-import pytest
-from ..utils import slice_to_shortest
 import numpy as np
+import pytest
+
+from ..utils import slice_to_shortest
 
 
 @pytest.fixture
@@ -26,7 +27,3 @@ def test_slice_to_shortest_axis_1(arrays):
 
     assert sliced_arr1.shape[1] == min_axis1
     assert sliced_arr2.shape[1] == min_axis1
-
-
-if __name__ == "__main__":
-    test_slice_to_shortest()

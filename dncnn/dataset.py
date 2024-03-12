@@ -1,13 +1,13 @@
+import logging
 from pathlib import Path
-
 from typing import Any
+
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+
 from dncnn.load_data import load_data
 from dncnn.utils import slice_to_shortest
-import numpy as np
-
-import logging
 
 logger = logging.getLogger(__name__)
 

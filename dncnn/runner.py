@@ -1,9 +1,11 @@
+import logging
 from typing import Any
+
 import torch
 from torch.utils.data.dataloader import DataLoader
+
 from dncnn.model import Loss
 
-import logging
 logger = logging.getLogger(__name__)
 
 class Runner:

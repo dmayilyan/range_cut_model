@@ -2,3 +2,4 @@ __pycache__
 # For now let's ignore hydra log output
 outputs
 *.swp
+*.pkl
