@@ -4,6 +4,6 @@ files:
 paths:
   data: ../ILDCaloSim
 params:
-  epoch_count: 2
+  epoch_count: 5
   hidden_count: 9
-  learning_rate: 0.01
+  learning_rate: 0.0001

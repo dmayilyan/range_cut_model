@@ -39,20 +39,22 @@ class Runner:
 
         #  logger.info("train loss for epoch %d: %f", epoch + 1, train_loss)
         loss_average = loss_sum / len(self.data_loader)
-        logger.info(loss_average)
 
     def run_single(self, data_cut_noisy: torch.Tensor, data_cut_sharp: torch.Tensor):
-        prediction = self.model(data_cut_noisy.float().to(self.device))
-        loss = self.loss(
-            prediction, data_cut_sharp.to(self.device)
-        ).to(self.device)
+        data_cut_noisy = data_cut_noisy.float().to(self.device)
+        data_cut_sharp = data_cut_sharp.float().to(self.device)
+        # shape is 1x30x30
+        prediction = self.model(data_cut_noisy)
+
+        loss = self.loss(prediction, data_cut_sharp)
+
+        del prediction
+        del data_cut_noisy
+        del data_cut_sharp
 
         return loss
 
 
-    def reset(self):
-        ...
-
-
 def run_epoch(train_runner: Runner, epoch_id: int) -> None:
+    logger.info("Running epoch %d", epoch_id)
     train_runner.run()
