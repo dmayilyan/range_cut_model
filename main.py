@@ -24,34 +24,28 @@ from typing import Callable
 
 from omegaconf import DictConfig, OmegaConf
 
-def mydecorator(func: Callable) -> Callable:
-    @wraps(func)
-    def inner_decorator(cfg: DictConfig):
-        print(OmegaConf.to_yaml(cfg))  # do some stuff
-        return func(cfg) # pass cfg to decorated function
+def mark_for_write(*args, **kwargs):
+    def inner_decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapped(cfg: DictConfig):
+            print(OmegaConf.to_yaml(cfg))  # do some stuff
+            #  if "db_name" not in kwargs:
+                #  cfg["db_cursor"] = "qwre"
+            return func(cfg) # pass cfg to decorated function
+        wrapped.db_cursor = "123123"
+        print('decorating', func, 'with argument', ", ".join([i for i in args]), "|", ", ".join([i for i in kwargs]))
+        return wrapped
 
     return inner_decorator
 
-def mark_for_write(func):
-    logger.info("Before wrapper")
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        logger.info(", ".join([i for i in args]))
-        logger.info("- - -")
-        logger.info(dir(kwargs))
-        logger.info("".join([i for i in kwargs.items()]))
-        #  logger.info(str(*args))
-        #  logger.info(str(**kwargs))
-        func(*args, **kwargs)
-    return wrapper
 
-#  @mark_for_write
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
-@mydecorator
+@mark_for_write(db_name="gweqwe")
 def main(cfg: DnCNNConfig) -> None:
+    logger.info(dir())
+    device = get_device()
     logger.info("Before return")
     return
-    device = get_device()
 
     model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=3).to(
     #  model = DnCNN(number_of_layers=3, kernel_size=3).to(
