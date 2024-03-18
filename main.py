@@ -1,12 +1,14 @@
 import logging
+from sqlite3 import connect, Cursor
 import pickle
 
+from dataclasses import fields
 from functools import wraps
 import hydra
 from hydra.core.config_store import ConfigStore
 from torch import optim
 
-from config import DnCNNConfig
+from config import DnCNNConfig, Params
 from dncnn.model import DnCNN  # , Loss
 from dncnn.runner import Runner, run_epoch
 from dncnn.utils import get_device
@@ -24,31 +26,51 @@ from typing import Callable
 
 from omegaconf import DictConfig, OmegaConf
 
-def mark_for_write(*args, **kwargs):
-    def inner_decorator(func: Callable) -> Callable:
-        @wraps(func)
-        def wrapped(cfg: DictConfig):
-            print(OmegaConf.to_yaml(cfg))  # do some stuff
-            #  if "db_name" not in kwargs:
-                #  cfg["db_cursor"] = "qwre"
-            return func(cfg) # pass cfg to decorated function
-        wrapped.db_cursor = "123123"
-        print('decorating', func, 'with argument', ", ".join([i for i in args]), "|", ", ".join([i for i in kwargs]))
-        return wrapped
 
-    return inner_decorator
+def mark_for_write(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        #  print(OmegaConf.to_yaml(kwargs["cfg"]))  # do some stuff
+        if "db_name" not in kwargs:
+            db_name = "log.db"
+            kwargs["db_name"] = db_name
+        else:
+            db_name = kwargs["db_name"]
+
+        conn = connect(db_name, isolation_level=None)
+        db_cur = conn.cursor()
+        kwargs["db_cur"] = db_cur
+
+        # Create the table based on Params dataclass
+        fields_str = ", ".join(
+            f"{field.name} {field.type.__name__}" for field in fields(Params)
+        )
+        db_cur.execute(f"CREATE TABLE IF NOT EXISTS {Params.__name__} ({fields_str})")
+
+        return func(*args, **kwargs)  # pass cfg to decorated function
+
+    return wrapped
 
 
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
-@mark_for_write(db_name="gweqwe")
-def main(cfg: DnCNNConfig) -> None:
-    logger.info(dir())
-    device = get_device()
+@mark_for_write
+def main(
+    cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
+) -> None:
+    cfg_dict = OmegaConf.to_object(cfg)
+
+    columns, values = cfg_dict["params"].keys(), cfg_dict["params"].values()
+    columns = ", ".join(map(str, columns))
+    values = ", ".join(map(str, values))
+
+    db_cur.execute(f"INSERT INTO Params ({columns}) VALUES ({values})")
     logger.info("Before return")
     return
 
+    device = get_device()
+
     model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=3).to(
-    #  model = DnCNN(number_of_layers=3, kernel_size=3).to(
+        #  model = DnCNN(number_of_layers=3, kernel_size=3).to(
         device=device
     )
     model.eval()
@@ -86,12 +108,12 @@ def main(cfg: DnCNNConfig) -> None:
             data_cut_big, data_cut_small = data
 
             output = model((data_cut_big.float().to(device)))
-        #  # plt.matshow(output[0].to("cpu").detach().numpy())
-        #  # plt.colorbar()
-        #  # display(output.size())
-        #  # display(output.squeeze((0, 1, 2)).size)
+            #  # plt.matshow(output[0].to("cpu").detach().numpy())
+            #  # plt.colorbar()
+            #  # display(output.size())
+            #  # display(output.squeeze((0, 1, 2)).size)
             batch_loss = criterion(output.to(device), data_cut_small.to(device)).to(
-            device
+                device
             )
             batch_loss.backward()
             optimizer.step()
