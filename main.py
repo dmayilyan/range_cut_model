@@ -64,7 +64,7 @@ def main(
     values = ", ".join(map(str, values))
 
     db_cur.execute(f"INSERT INTO Params ({columns}) VALUES ({values})")
-    logger.info("Before return")
+    logging.info("Logging '%s' into '%s'", values, columns)
     return
 
     device = get_device()
@@ -120,6 +120,7 @@ def main(
             model.eval()
             train_loss += batch_loss.item()
             train_loss = train_loss / len(data)
+            #  db_cur.execute("INSERT INTO Params (train_loss) VALUES ()", (train_loss))
             training_losses[epoch] = train_loss
         logger.info("train loss for epoch %d: %f", epoch + 1, train_loss)
 
