@@ -8,6 +8,7 @@ from dncnn.model import Loss
 
 logger = logging.getLogger(__name__)
 
+
 class Runner:
     def __init__(
         self,

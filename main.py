@@ -1,36 +1,32 @@
 import logging
-from sqlite3 import connect, Cursor
 import pickle
-
 from dataclasses import fields
 from functools import wraps
+from sqlite3 import Cursor, connect
+
 import hydra
+import numpy as np
 from hydra.core.config_store import ConfigStore
 from torch import optim
 
 from config import DnCNNConfig, Params
-from dncnn.model import DnCNN  # , Loss
-from dncnn.runner import Runner, run_epoch
+from dncnn.model import DnCNN, Loss
 from dncnn.utils import get_device
-
-from dncnn.model import Loss
-import numpy as np
+from dncnn.dataset import create_dataloader
 
 logger = logging.getLogger(__name__)
 
 cs = ConfigStore.instance()
 cs.store(name="dncnn_config", node=DnCNNConfig)
 
-from functools import wraps
 from typing import Callable
 
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
 
 def mark_for_write(func: Callable) -> Callable:
     @wraps(func)
     def wrapped(*args, **kwargs):
-        #  print(OmegaConf.to_yaml(kwargs["cfg"]))  # do some stuff
         if "db_name" not in kwargs:
             db_name = "log.db"
             kwargs["db_name"] = db_name
@@ -58,6 +54,7 @@ def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
     cfg_dict = OmegaConf.to_object(cfg)
+    logger.info(OmegaConf.to_yaml(cfg))
 
     columns, values = cfg_dict["params"].keys(), cfg_dict["params"].values()
     columns = ", ".join(map(str, columns))
@@ -65,29 +62,28 @@ def main(
 
     db_cur.execute(f"INSERT INTO Params ({columns}) VALUES ({values})")
     logging.info("Logging '%s' into '%s'", values, columns)
-    return
 
     device = get_device()
 
     model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=3).to(
-        #  model = DnCNN(number_of_layers=3, kernel_size=3).to(
         device=device
     )
     model.eval()
     optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
 
     #  model.eval()
-    #  data_loader = create_dataloader(
-    #  root_path=cfg.paths.data,
-    #  file_path_noisy=cfg.files.train_data_noisy,
-    #  file_path_sharp=cfg.files.train_data_sharp,
-    #  )
-    #  with open("data_loader.pkl", "wb") as f:
-    #  pickle.dump(data_loader, f)
+    data_loader = create_dataloader(
+    root_path=cfg.files.root_path,
+    file_path_noisy=cfg.files.train_data_noisy,
+    file_path_sharp=cfg.files.train_data_sharp,
+    )
+    with open("data_loader.pkl", "wb") as f:
+        pickle.dump(data_loader, f)
 
-    with open("data_loader.pkl", "rb") as f:
-        logging.info("Reading from a pickle.")
-        data_loader = pickle.load(f)
+    return
+    #  with open("data_loader.pkl", "rb") as f:
+        #  logging.info("Reading from a pickle.")
+        #  data_loader = pickle.load(f)
 
     #  runner = Runner(data_loader, model, optimizer, device)
 
