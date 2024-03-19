@@ -1,5 +1,4 @@
-from dataclasses import dataclass, fields, is_dataclass
-from typing import Callable
+from dataclasses import dataclass
 
 
 @dataclass
@@ -24,20 +23,16 @@ class DnCNNConfig:
     params: Params
 
 
-def get_fields(dc: Callable, field_dict: dict = None):
-    # We assume that we don't have repeating fields in our dataclasses
-    for i in fields(dc):
-        if is_dataclass(i.type):
-            get_fields(i.type, field_dict)
-        else:
-            field_dict[i.name] = i.type.__name__
-
-    return field_dict
+@dataclass
+class LogConfig:
+    train_loss: float
+    model_params: DnCNNConfig
 
 
 if __name__ == "__main__":
-    field_dict = {}
-    qwe = get_fields(DnCNNConfig, field_dict)
-    print("- - -")
-    #  print(f"{field_dict=}")
-    print(qwe)
+    #  field_dict = {}
+    #  qwe = get_fields(DnCNNConfig, field_dict)
+    #  print("- - -")
+    #  #  print(f"{field_dict=}")
+    #  print(qwe)
+    print(LogConfig.__name__)

@@ -1,7 +1,7 @@
 files:
   root_path: ../ILDCaloSim
-  train_data_noisy: e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5
-  train_data_sharp: e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5
+  train_noisy: e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5
+  train_sharp: e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5
 params:
   epoch_count: 5
   hidden_count: 9

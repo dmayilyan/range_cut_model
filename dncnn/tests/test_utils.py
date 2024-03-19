@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..utils import slice_to_shortest
+from ..utils import slice_to_shortest, flatten_dict
 
 
 @pytest.fixture
@@ -9,6 +9,16 @@ def arrays():
     arr1 = np.empty((2, 5)).round(2)
     arr2 = np.empty((5, 6)).round(2)
     return arr1, arr2
+
+
+@pytest.fixture
+def nested_dict():
+    nested_dict = {
+        "key0": {"key1": "value1"},
+        "key2": {"key3": "value3", "key4": "value4", "key5": "value5"},
+    }
+
+    return nested_dict
 
 
 def test_slice_to_shortest_axis_default(arrays):
@@ -27,3 +37,15 @@ def test_slice_to_shortest_axis_1(arrays):
 
     assert sliced_arr1.shape[1] == min_axis1
     assert sliced_arr2.shape[1] == min_axis1
+
+
+def test_flatten_dict(nested_dict):
+    flat_result = flatten_dict(nested_dict)
+    expected_result = {
+        "key1": "value1",
+        "key3": "value3",
+        "key4": "value4",
+        "key5": "value5",
+    }
+
+    assert flat_result == expected_result
