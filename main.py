@@ -44,51 +44,25 @@ def mark_for_write(func: Callable) -> Callable:
     return wrapped
 
 
+# log writing needs refactoring
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 @mark_for_write
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
     field_dict = {}
-    #  field_dict = 
     get_fields(LogConfig, field_dict)
-    print(f"{field_dict=}")
-    print("!@#")
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
-    db_cur.execute(f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str})")
+    db_cur.execute(f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
 
     main_dict = OmegaConf.to_object(cfg)
     logger.info(main_dict)
 
-    #  print(get_fields(LogConfig, field_dict), "<><><>")
-    #  print(field_dict)
-    #  print(main_dict, "+ + +")
-    #  print(flatten_dict(main_dict), "+ + +")
     flattened_main_dict = flatten_dict(main_dict)
-    print(flattened_main_dict, "+ + +")
     columns, values = flattened_main_dict.keys(), flattened_main_dict.values()
-    #  columns = ", ".join(map(str, columns))
-    #  columns = tuple(map(str, columns))
-    #  values = ", ".join(map(str, values))
-    #  values = tuple(map(str, values))
-    print(values)
+    values = tuple(values)
 
-    #  print("------")
-    print(columns)
-    print("######")
-    print(values)
-    #  qwe = {}
-    #  print(get_fields(LogConfig, qwe))
-
-    #  print(qwe)
-    #  db_cur.execute(f"INSERT INTO {str(LogConfig.__name__)} (root_path, train_noisy, train_sharp, epoch_count, hidden_count, learning_rate) VALUES ('../ILDCaloSim', 'e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5', 'e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5', 5, 9, 0.0001)")
-    print([(i, type(i)) for i in list(columns)])
-    print([(i, type(i)) for i in list(values)])
-    print(tuple(values), "values")
-    print(len(values), values)
-    print('?, '*len(values))
-    print("-_-")
-    db_cur.execute(f"INSERT INTO LogConfig (root_path, train_noisy, train_sharp, epoch_count, hidden_count, learning_rate) VALUES ({('?, '*len(values))[:-1]})", values)
+    db_cur.execute(f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values))})""", values)
     logging.info("Logging '%s' into '%s'", values, columns)
     return
 
