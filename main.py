@@ -60,11 +60,9 @@ def main(
 
     flattened_main_dict = flatten_dict(main_dict)
     columns, values = flattened_main_dict.keys(), flattened_main_dict.values()
+    columns = list(columns)
     values = tuple(values)
 
-    db_cur.execute(f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values))})""", values)
-    logging.info("Logging '%s' into '%s'", values, columns)
-    return
 
     device = get_device()
 
@@ -92,6 +90,7 @@ def main(
     criterion = Loss()
     criterion.to(device)
 
+    columns += ["epoch", "train_loss"]
     training_losses = np.zeros(cfg.params.epoch_count)
     validation_losses = np.zeros(cfg.params.epoch_count)
     for epoch in range(cfg.params.epoch_count):
@@ -114,10 +113,11 @@ def main(
             optimizer.step()
             model.eval()
             train_loss += batch_loss.item()
-            train_loss = train_loss / len(data)
-            #  db_cur.execute("INSERT INTO Params (train_loss) VALUES ()", (train_loss))
-            training_losses[epoch] = train_loss
-        logger.info("train loss for epoch %d: %f", epoch + 1, train_loss)
+        train_loss = train_loss / len(data)
+        training_losses[epoch] = train_loss
+
+        db_cur.execute(f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss)))})""", values + (epoch, train_loss))
+        logger.info("train loss for epoch %d: %f", epoch, train_loss)
 
 
 if __name__ == "__main__":

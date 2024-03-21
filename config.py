@@ -26,6 +26,7 @@ class DnCNNConfig:
 @dataclass
 class LogConfig:
     train_loss: float
+    epoch: int
     model_params: DnCNNConfig
 
 
