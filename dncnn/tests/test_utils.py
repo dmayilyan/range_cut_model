@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..utils import slice_to_shortest, flatten_dict
+from ..utils import flatten_dict, slice_to_shortest
 
 
 @pytest.fixture

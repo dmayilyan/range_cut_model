@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
+from torch.utils.data.sampler import Sampler, SubsetRandomSampler
 
 from dncnn.load_data import load_data
 from dncnn.utils import slice_to_shortest
@@ -22,13 +23,6 @@ class CaloData(Dataset):
         return len(self.data_cut_big)
 
     def __getitem__(self, idx):
-        # event_idx = self.data[idx]
-
-        # if self.transform:
-        #     sample = self.transform(self.data)
-
-        # print(type(sample))
-
         return self.data_cut_big[idx, :, :], self.data_cut_small[idx, :, :]
 
 
@@ -41,4 +35,20 @@ def create_dataloader(
     data_sharp = load_data(data_path_sharp)
     # Slice events to the shortest
     data_noisy, data_sharp = slice_to_shortest(data_noisy, data_sharp)
-    return DataLoader(dataset=CaloData(data_noisy, data_sharp), num_workers=2)
+    dataset = CaloData(data_noisy, data_sharp)
+
+    tt_split = int(0.8 * len(dataset))
+    indices = list(range(len(dataset)))
+    train_indices, test_indices = indices[:tt_split], indices[tt_split:]
+
+    train_sampler = SubsetRandomSampler(train_indices)
+    test_sampler = SubsetRandomSampler(test_indices)
+
+    train_loader = DataLoader(
+        CaloData(data_noisy, data_sharp), sampler=train_sampler, num_workers=2
+    )
+    test_loader = DataLoader(
+        CaloData(data_noisy, data_sharp), sampler=test_sampler, num_workers=2
+    )
+
+    return train_loader, test_loader

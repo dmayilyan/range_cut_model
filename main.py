@@ -1,5 +1,4 @@
 import logging
-
 import pickle
 from functools import wraps
 from sqlite3 import Cursor, connect
@@ -8,11 +7,12 @@ import hydra
 import numpy as np
 from hydra.core.config_store import ConfigStore
 from torch import optim
+from torch.utils.data import random_split
 
 from config import DnCNNConfig, LogConfig
+from dncnn.dataset import create_dataloader
 from dncnn.model import DnCNN, Loss
-from dncnn.utils import get_device, get_fields, flatten_dict
-
+from dncnn.utils import flatten_dict, get_device, get_fields
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def mark_for_write(func: Callable) -> Callable:
 
         kwargs["db_cur"] = db_cur
 
-        return func(*args, **kwargs)  # pass cfg to decorated function
+        return func(*args, **kwargs)
 
     return wrapped
 
@@ -53,7 +53,9 @@ def main(
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
-    db_cur.execute(f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+    db_cur.execute(
+        f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+    )
 
     main_dict = OmegaConf.to_object(cfg)
     logger.info(main_dict)
@@ -63,7 +65,6 @@ def main(
     columns = list(columns)
     values = tuple(values)
 
-
     device = get_device()
 
     model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=3).to(
@@ -72,30 +73,42 @@ def main(
     model.eval()
     optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
 
-    #  model.eval()
-    #  data_loader = create_dataloader(
-    #  root_path=cfg.files.root_path,
-    #  file_path_noisy=cfg.files.train_data_noisy,
-    #  file_path_sharp=cfg.files.train_data_sharp,
+    #  train_loader, test_loader = create_dataloader(
+        #  root_path=cfg.files.root_path,
+        #  file_path_noisy=cfg.files.train_noisy,
+        #  file_path_sharp=cfg.files.train_sharp,
     #  )
-    #  with open("data_loader.pkl", "wb") as f:
-    #  pickle.dump(data_loader, f)
 
-    with open("data_loader.pkl", "rb") as f:
-        logging.info("Reading from a pickle.")
-        data_loader = pickle.load(f)
+    #  data_loader = create_dataloader(
+        #  root_path=cfg.files.root_path,
+        #  file_path_noisy=cfg.files.train_data_noisy,
+        #  file_path_sharp=cfg.files.train_data_sharp,
+    #  )
+    #  with open("train_loader.pkl", "wb") as f:
+        #  pickle.dump(train_loader, f)
 
-    #  runner = Runner(data_loader, model, optimizer, device)
+    #  with open("test_loader.pkl", "wb") as f:
+        #  pickle.dump(test_loader, f)
+
+    #  return
+
+    with open("train_loader.pkl", "rb") as f:
+        logging.info("Reading train_loader from a pickle.")
+        train_loader = pickle.load(f)
+
+    with open("test_loader.pkl", "rb") as f:
+        logging.info("Reading test_loader from a pickle.")
+        test_loader = pickle.load(f)
 
     criterion = Loss()
     criterion.to(device)
 
-    columns += ["epoch", "train_loss"]
+    columns += ["epoch", "train_loss", "test_loss"]
     training_losses = np.zeros(cfg.params.epoch_count)
-    validation_losses = np.zeros(cfg.params.epoch_count)
+    test_losses = np.zeros(cfg.params.epoch_count)
     for epoch in range(cfg.params.epoch_count):
         train_loss = 0
-        for i, data in enumerate(data_loader):
+        for i, data in enumerate(train_loader):
             model.train()
             model.zero_grad()
 
@@ -116,8 +129,23 @@ def main(
         train_loss = train_loss / len(data)
         training_losses[epoch] = train_loss
 
-        db_cur.execute(f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss)))})""", values + (epoch, train_loss))
-        logger.info("train loss for epoch %d: %f", epoch, train_loss)
+        test_loss = 0
+        for i, data in enumerate(test_loader):
+            data_cut_big, data_cut_small = data
+
+            output = model((data_cut_big.float().to(device)))
+            batch_loss = criterion(output.to(device), data_cut_small.to(device)).to(
+                device
+            )
+            test_loss += batch_loss.item()
+        test_loss = test_loss / len(data)
+        test_losses[epoch] = test_loss
+
+        db_cur.execute(
+            f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
+            values + (epoch, train_loss, test_loss),
+        )
+        logger.info("train loss for epoch %d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss)
 
 
 if __name__ == "__main__":
