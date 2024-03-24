@@ -21,6 +21,8 @@ class CaloData(Dataset[Any]):
         self.transform = transform
 
     def __len__(self):
+        # Needs to be address, currently non-functional
+
         #  logger.info(self.data_cut_big.shape)
         #  logger.info(self.data_cut_big.size())
         #  logger.info(len(self.data_cut_big))
@@ -56,4 +58,34 @@ def create_dataloader(
     return DataLoader(
         CaloData(data_noisy, data_sharp), sampler=sampler, num_workers=2
     )
+
+if __name__ == "__main__":
+    print("Will read the file now")
+    data = create_dataloader(root_path="../ILDCaloSim",
+                             file_path_noisy="e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5",
+                             file_path_sharp="e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5",
+                             train=False
+    )
+    print("Have read the file now")
+    vals = []
+    for i, val in enumerate(data):
+        if i >= 100:
+            break
+
+        a, b = val
+        a, b = a.squeeze(), b.squeeze()
+        #  print(a.size())
+        #  print(b.size())
+
+        vals += a.flatten().tolist()
+        #  print(a.flatten().tolist())
+        print(i, a.flatten().min())
+    import matplotlib.pyplot as plt
+    plt.hist(vals, bins=np.arange(-10, 14, 0.5))
+    plt.semilogy()
+    plt.savefig("test.png")
+    plt.figure()
+    plt.hist(np.log(vals))
+    plt.semilogy()
+    plt.savefig("test_log.png")
 

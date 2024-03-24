@@ -49,6 +49,7 @@ def mark_for_write(func: Callable) -> Callable:
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
+    print(cfg)
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
@@ -117,6 +118,7 @@ def main(
             model.zero_grad()
 
             data_cut_big, data_cut_small = data
+            data_cut_big, data_cut_small = data_cut_big.squeeze(), data_cut_small.squeeze()
             #  print(type(data[0]), type(data[1]))
             #  print(data_cut_big.shape)
             #  print(data_cut_small.shape)
