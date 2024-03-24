@@ -29,12 +29,3 @@ class LogConfig:
     test_loss: float
     epoch: int
     model_params: DnCNNConfig
-
-
-if __name__ == "__main__":
-    #  field_dict = {}
-    #  qwe = get_fields(DnCNNConfig, field_dict)
-    #  print("- - -")
-    #  #  print(f"{field_dict=}")
-    #  print(qwe)
-    print(LogConfig.__name__)

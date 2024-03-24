@@ -27,7 +27,6 @@ from omegaconf import OmegaConf
 def mark_for_write(func: Callable) -> Callable:
     @wraps(func)
     def wrapped(*args, **kwargs):
-        print(args)
         if "db_name" not in kwargs:
             db_name = "log.db"
             kwargs["db_name"] = db_name
@@ -58,7 +57,6 @@ def main(
     )
 
     main_dict = OmegaConf.to_object(cfg)
-    logger.info(main_dict)
 
     flattened_main_dict = flatten_dict(main_dict)
     columns, values = flattened_main_dict.keys(), flattened_main_dict.values()
@@ -73,17 +71,20 @@ def main(
     model.eval()
     optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
 
-    #  train_loader, test_loader = create_dataloader(
-        #  root_path=cfg.files.root_path,
-        #  file_path_noisy=cfg.files.train_noisy,
-        #  file_path_sharp=cfg.files.train_sharp,
-    #  )
+    train_loader = create_dataloader(
+        root_path=cfg.files.root_path,
+        file_path_noisy=cfg.files.train_noisy,
+        file_path_sharp=cfg.files.train_sharp,
+        train = True
+    )
 
-    #  data_loader = create_dataloader(
-        #  root_path=cfg.files.root_path,
-        #  file_path_noisy=cfg.files.train_data_noisy,
-        #  file_path_sharp=cfg.files.train_data_sharp,
-    #  )
+    test_loader = create_dataloader(
+        root_path=cfg.files.root_path,
+        file_path_noisy=cfg.files.train_noisy,
+        file_path_sharp=cfg.files.train_sharp,
+        train = False
+    )
+
     #  with open("train_loader.pkl", "wb") as f:
         #  pickle.dump(train_loader, f)
 
@@ -92,13 +93,13 @@ def main(
 
     #  return
 
-    with open("train_loader.pkl", "rb") as f:
-        logging.info("Reading train_loader from a pickle.")
-        train_loader = pickle.load(f)
+    #  with open("train_loader.pkl", "rb") as f:
+        #  logging.info("Reading train_loader from a pickle.")
+        #  train_loader = pickle.load(f)
 
-    with open("test_loader.pkl", "rb") as f:
-        logging.info("Reading test_loader from a pickle.")
-        test_loader = pickle.load(f)
+    #  with open("test_loader.pkl", "rb") as f:
+        #  logging.info("Reading test_loader from a pickle.")
+        #  test_loader = pickle.load(f)
 
     criterion = Loss()
     criterion.to(device)
@@ -108,11 +109,24 @@ def main(
     test_losses = np.zeros(cfg.params.epoch_count)
     for epoch in range(cfg.params.epoch_count):
         train_loss = 0
+        train_max_s = []
+        train_max_b = []
         for i, data in enumerate(train_loader):
+            #  print("epoch", epoch, "train", i)
             model.train()
             model.zero_grad()
 
             data_cut_big, data_cut_small = data
+            #  print(type(data[0]), type(data[1]))
+            #  print(data_cut_big.shape)
+            #  print(data_cut_small.shape)
+            #  print("data prints")
+            #  train_max_b.append(max(data_cut_big))
+            #  train_max_s.append(max(data_cut_small))
+
+
+            #  logging.info(data_cut_big.shape)
+            #  logging.info(data_cut_small.shape)
 
             output = model((data_cut_big.float().to(device)))
             #  # plt.matshow(output[0].to("cpu").detach().numpy())
@@ -126,26 +140,37 @@ def main(
             optimizer.step()
             model.eval()
             train_loss += batch_loss.item()
+
+        #  print(f"{max(train_max_s)=} {mean(train_max_s)=}")
+        #  print(f"{max(train_max_b)=} {mean(train_max_b)=}")
+        #  print(f"{len(data)=}")
         train_loss = train_loss / len(data)
+        print("train i", i, train_loss)
+        train_loss = train_loss / i
         training_losses[epoch] = train_loss
 
         test_loss = 0
         for i, data in enumerate(test_loader):
             data_cut_big, data_cut_small = data
 
+            #  logging.info("test data_cut big", data_cut_big.shape)
+            #  logging.info("data_cut_small", data_cut_small.shape)
+
             output = model((data_cut_big.float().to(device)))
             batch_loss = criterion(output.to(device), data_cut_small.to(device)).to(
                 device
             )
             test_loss += batch_loss.item()
-        test_loss = test_loss / len(data)
+        #  test_loss = test_loss / len(data)
+        print("test i", i, test_loss)
+        test_loss = test_loss / i
         test_losses[epoch] = test_loss
 
         db_cur.execute(
             f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
             values + (epoch, train_loss, test_loss),
         )
-        logger.info("train loss for epoch %d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss)
+        logger.info("epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss)
 
 
 if __name__ == "__main__":

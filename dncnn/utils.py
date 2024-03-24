@@ -41,7 +41,6 @@ def get_fields(dc: Callable, field_dict: dict = None) -> dict:
             get_fields(i.type, field_dict)
         else:
             field_dict[i.name] = i.type.__name__
-            print(field_dict)
 
     return field_dict
 

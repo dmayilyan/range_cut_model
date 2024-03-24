@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torch.utils.data.sampler import Sampler, SubsetRandomSampler
+from torch.utils.data.sampler import Sampler, SubsetRandomSampler, SequentialSampler
 
 from dncnn.load_data import load_data
 from dncnn.utils import slice_to_shortest
@@ -13,21 +13,27 @@ from dncnn.utils import slice_to_shortest
 logger = logging.getLogger(__name__)
 
 
-class CaloData(Dataset):
+class CaloData(Dataset[Any]):
     def __init__(self, data_noisy: np.ndarray, data_sharp: np.ndarray, transform=None):
         self.data_cut_big = torch.from_numpy(np.sum(data_noisy, axis=3))
         self.data_cut_small = torch.from_numpy(np.sum(data_sharp, axis=3))
+        #  print(self.data_cut_big.size())
         self.transform = transform
 
     def __len__(self):
+        #  logger.info(self.data_cut_big.shape)
+        #  logger.info(self.data_cut_big.size())
+        #  logger.info(len(self.data_cut_big))
+        #  logger.info("- - -")
         return len(self.data_cut_big)
 
     def __getitem__(self, idx):
+        #  print(self.data_cut_big[idx, :, :].size())
         return self.data_cut_big[idx, :, :], self.data_cut_small[idx, :, :]
 
 
 def create_dataloader(
-    root_path: str, file_path_noisy: str, file_path_sharp: str
+    root_path: str, file_path_noisy: str, file_path_sharp: str, train: bool=True
 ) -> DataLoader[Any]:
     data_path_noisy = Path(f"{root_path}/{file_path_noisy}")
     data_path_sharp = Path(f"{root_path}/{file_path_sharp}")
@@ -39,16 +45,15 @@ def create_dataloader(
 
     tt_split = int(0.8 * len(dataset))
     indices = list(range(len(dataset)))
-    train_indices, test_indices = indices[:tt_split], indices[tt_split:]
 
-    train_sampler = SubsetRandomSampler(train_indices)
-    test_sampler = SubsetRandomSampler(test_indices)
+    if train:
+        indices = indices[:tt_split]
+    else:
+        indices = indices[tt_split:]
 
-    train_loader = DataLoader(
-        CaloData(data_noisy, data_sharp), sampler=train_sampler, num_workers=2
+    sampler = SequentialSampler(indices)
+
+    return DataLoader(
+        CaloData(data_noisy, data_sharp), sampler=sampler, num_workers=2
     )
-    test_loader = DataLoader(
-        CaloData(data_noisy, data_sharp), sampler=test_sampler, num_workers=2
-    )
 
-    return train_loader, test_loader
