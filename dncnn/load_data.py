@@ -1,10 +1,11 @@
 import logging
+from functools import cache
 
 import h5py
 import numpy as np
-from functools import cache
 
 logger = logging.getLogger(__name__)
+
 
 @cache
 def load_data(data_path) -> np.ndarray:

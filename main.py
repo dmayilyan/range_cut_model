@@ -49,7 +49,6 @@ def mark_for_write(func: Callable) -> Callable:
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
-    print(cfg)
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
@@ -72,19 +71,20 @@ def main(
     model.eval()
     optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
 
-    train_loader = create_dataloader(
-        root_path=cfg.files.root_path,
-        file_path_noisy=cfg.files.train_noisy,
-        file_path_sharp=cfg.files.train_sharp,
-        train = True
-    )
+    #  train_loader = create_dataloader(
+        #  root_path=cfg.files.root_path,
+        #  file_path_noisy=cfg.files.train_noisy,
+        #  file_path_sharp=cfg.files.train_sharp,
+        #  is_train=True,
+    #  )
 
-    test_loader = create_dataloader(
-        root_path=cfg.files.root_path,
-        file_path_noisy=cfg.files.train_noisy,
-        file_path_sharp=cfg.files.train_sharp,
-        train = False
-    )
+    #  test_loader = create_dataloader(
+        #  root_path=cfg.files.root_path,
+        #  file_path_noisy=cfg.files.train_noisy,
+        #  file_path_sharp=cfg.files.train_sharp,
+        #  is_train=False,
+        #  transform=train_loader.dataset.transform,
+    #  )
 
     #  with open("train_loader.pkl", "wb") as f:
         #  pickle.dump(train_loader, f)
@@ -94,13 +94,13 @@ def main(
 
     #  return
 
-    #  with open("train_loader.pkl", "rb") as f:
-        #  logging.info("Reading train_loader from a pickle.")
-        #  train_loader = pickle.load(f)
+    with open("train_loader.pkl", "rb") as f:
+        logging.info("Reading train_loader from a pickle.")
+        train_loader = pickle.load(f)
 
-    #  with open("test_loader.pkl", "rb") as f:
-        #  logging.info("Reading test_loader from a pickle.")
-        #  test_loader = pickle.load(f)
+    with open("test_loader.pkl", "rb") as f:
+        logging.info("Reading test_loader from a pickle.")
+        test_loader = pickle.load(f)
 
     criterion = Loss()
     criterion.to(device)
@@ -118,14 +118,15 @@ def main(
             model.zero_grad()
 
             data_cut_big, data_cut_small = data
-            data_cut_big, data_cut_small = data_cut_big.squeeze(), data_cut_small.squeeze()
+            #  data_cut_big, data_cut_small = data_cut_big.squeeze(), data_cut_small.squeeze()
+            print("data_shape", data_cut_big.shape)
+            print("data_shape", data_cut_small.shape)
             #  print(type(data[0]), type(data[1]))
             #  print(data_cut_big.shape)
             #  print(data_cut_small.shape)
             #  print("data prints")
             #  train_max_b.append(max(data_cut_big))
             #  train_max_s.append(max(data_cut_small))
-
 
             #  logging.info(data_cut_big.shape)
             #  logging.info(data_cut_small.shape)
@@ -172,7 +173,9 @@ def main(
             f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
             values + (epoch, train_loss, test_loss),
         )
-        logger.info("epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss)
+        logger.info(
+            "epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss
+        )
 
 
 if __name__ == "__main__":
