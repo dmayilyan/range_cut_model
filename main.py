@@ -71,20 +71,20 @@ def main(
     model.eval()
     optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
 
-    #  train_loader = create_dataloader(
-        #  root_path=cfg.files.root_path,
-        #  file_path_noisy=cfg.files.train_noisy,
-        #  file_path_sharp=cfg.files.train_sharp,
-        #  is_train=True,
-    #  )
+    train_loader = create_dataloader(
+        root_path=cfg.files.root_path,
+        file_path_noisy=cfg.files.train_noisy,
+        file_path_sharp=cfg.files.train_sharp,
+        is_train=True,
+    )
 
-    #  test_loader = create_dataloader(
-        #  root_path=cfg.files.root_path,
-        #  file_path_noisy=cfg.files.train_noisy,
-        #  file_path_sharp=cfg.files.train_sharp,
-        #  is_train=False,
-        #  transform=train_loader.dataset.transform,
-    #  )
+    test_loader = create_dataloader(
+        root_path=cfg.files.root_path,
+        file_path_noisy=cfg.files.train_noisy,
+        file_path_sharp=cfg.files.train_sharp,
+        is_train=False,
+        transform=train_loader.dataset.transform,
+    )
 
     #  with open("train_loader.pkl", "wb") as f:
         #  pickle.dump(train_loader, f)
@@ -94,13 +94,13 @@ def main(
 
     #  return
 
-    with open("train_loader.pkl", "rb") as f:
-        logging.info("Reading train_loader from a pickle.")
-        train_loader = pickle.load(f)
+    #  with open("train_loader.pkl", "rb") as f:
+        #  logging.info("Reading train_loader from a pickle.")
+        #  train_loader = pickle.load(f)
 
-    with open("test_loader.pkl", "rb") as f:
-        logging.info("Reading test_loader from a pickle.")
-        test_loader = pickle.load(f)
+    #  with open("test_loader.pkl", "rb") as f:
+        #  logging.info("Reading test_loader from a pickle.")
+        #  test_loader = pickle.load(f)
 
     criterion = Loss()
     criterion.to(device)
@@ -118,9 +118,12 @@ def main(
             model.zero_grad()
 
             data_cut_big, data_cut_small = data
-            #  data_cut_big, data_cut_small = data_cut_big.squeeze(), data_cut_small.squeeze()
-            print("data_shape", data_cut_big.shape)
-            print("data_shape", data_cut_small.shape)
+            #  print("main loop", data_cut_big.shape)
+            print(f"{np.mean(data_cut_big.flatten().tolist())=}")
+            print(f"{np.std(data_cut_big.flatten().tolist())=}")
+
+            #  print("data_shape", data_cut_big.shape)
+            #  print("data_shape", data_cut_small.shape)
             #  print(type(data[0]), type(data[1]))
             #  print(data_cut_big.shape)
             #  print(data_cut_small.shape)
