@@ -119,8 +119,8 @@ def main(
 
             data_cut_big, data_cut_small = data
             #  print("main loop", data_cut_big.shape)
-            print(f"{np.mean(data_cut_big.flatten().tolist())=}")
-            print(f"{np.std(data_cut_big.flatten().tolist())=}")
+            #  print(f"{np.mean(data_cut_big.flatten().tolist())=}")
+            #  print(f"{np.std(data_cut_big.flatten().tolist())=}")
 
             #  print("data_shape", data_cut_big.shape)
             #  print("data_shape", data_cut_small.shape)

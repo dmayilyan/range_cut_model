@@ -25,18 +25,18 @@ class CaloData(Dataset[Any]):
 
         self.transform = transform
 
-        #  mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
-        #  std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
-        #  #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
-        #  self.data_noisy = (
-            #  self.data_noisy - mean_noisy
-        #  ) / std_noisy
+        mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
+        std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
+        #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
+        self.data_noisy = (
+            self.data_noisy - mean_noisy
+        ) / std_noisy
 
-        #  mean_sharp = torch.mean(self.data_sharp, dim=(1, 2, 3), keepdim=True)
-        #  std_sharp = torch.std(self.data_sharp, dim=(1, 2, 3), keepdim=True)
-        #  self.data_sharp = (
-            #  self.data_sharp - mean_sharp
-        #  ) / std_noisy
+        mean_sharp = torch.mean(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+        std_sharp = torch.std(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+        self.data_sharp = (
+            self.data_sharp - mean_sharp
+        ) / std_noisy
 
         #  logger.info(f"data_noisy before sum: {self.data_noisy}")
 
