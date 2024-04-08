@@ -25,6 +25,9 @@ class CaloData(Dataset[Any]):
 
         self.transform = transform
 
+        self.data_noisy = torch.sqrt(self.data_noisy)
+        self.data_sharp = torch.sqrt(self.data_sharp)
+
         mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
         std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
         #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
@@ -42,6 +45,7 @@ class CaloData(Dataset[Any]):
 
         self.data_noisy = torch.sum(self.data_noisy, dim=3)
         self.data_sharp = torch.sum(self.data_sharp, dim=3)
+
 
         #  for i, x in enumerate(torch.unbind(self.data_noisy, dim=0)):
             #  if i > 1:
@@ -68,7 +72,14 @@ class CaloData(Dataset[Any]):
                 #  torch.sum(self.data_noisy, dim=3).shape)
 
         #  logger.info(f"data_noisy: {self.data_noisy.shape}")
-        return self.data_noisy[idx, :, :], self.data_sharp[idx, :, :]
+
+        randint = np.random.randint(0, 4)
+        #  logger.info("Rotating %d times", randint)
+        data_rotflipped = torch.rot90(self.data_noisy[idx, :, :], k=randint, dims=[0, 1])
+        if torch.rand(1).round():
+            data_rotflipped = torch.fliplr(data_rotflipped)
+
+        return data_rotflipped, self.data_sharp[idx, :, :]
         #  else:
             #  logger.error("Transform was not specified.")
 

@@ -86,11 +86,11 @@ def main(
         transform=train_loader.dataset.transform,
     )
 
-    #  with open("train_loader.pkl", "wb") as f:
-        #  pickle.dump(train_loader, f)
+    with open("train_loader.pkl", "wb") as f:
+        pickle.dump(train_loader, f)
 
-    #  with open("test_loader.pkl", "wb") as f:
-        #  pickle.dump(test_loader, f)
+    with open("test_loader.pkl", "wb") as f:
+        pickle.dump(test_loader, f)
 
     #  return
 
@@ -150,9 +150,9 @@ def main(
         #  print(f"{max(train_max_s)=} {mean(train_max_s)=}")
         #  print(f"{max(train_max_b)=} {mean(train_max_b)=}")
         #  print(f"{len(data)=}")
-        train_loss = train_loss / len(data)
-        print("train i", i, train_loss)
+        #  train_loss = train_loss / len(data)
         train_loss = train_loss / i
+        print("train i", i, train_loss)
         training_losses[epoch] = train_loss
 
         test_loss = 0
@@ -168,8 +168,8 @@ def main(
             )
             test_loss += batch_loss.item()
         #  test_loss = test_loss / len(data)
-        print("test i", i, test_loss)
         test_loss = test_loss / i
+        print("test i", i, test_loss)
         test_losses[epoch] = test_loss
 
         db_cur.execute(
