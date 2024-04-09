@@ -69,7 +69,7 @@ def main(
         device=device
     )
     model.eval()
-    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=1e-5)
 
     train_loader = create_dataloader(
         root_path=cfg.files.root_path,
@@ -152,7 +152,7 @@ def main(
         #  print(f"{len(data)=}")
         #  train_loss = train_loss / len(data)
         train_loss = train_loss / i
-        print("train i", i, train_loss)
+        #  print("train i", i, train_loss)
         training_losses[epoch] = train_loss
 
         test_loss = 0
@@ -169,7 +169,7 @@ def main(
             test_loss += batch_loss.item()
         #  test_loss = test_loss / len(data)
         test_loss = test_loss / i
-        print("test i", i, test_loss)
+        #  print("test i", i, test_loss)
         test_losses[epoch] = test_loss
 
         db_cur.execute(
