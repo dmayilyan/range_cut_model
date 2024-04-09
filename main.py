@@ -86,11 +86,11 @@ def main(
         transform=train_loader.dataset.transform,
     )
 
-    with open("train_loader.pkl", "wb") as f:
-        pickle.dump(train_loader, f)
+    #  with open("train_loader.pkl", "wb") as f:
+        #  pickle.dump(train_loader, f)
 
-    with open("test_loader.pkl", "wb") as f:
-        pickle.dump(test_loader, f)
+    #  with open("test_loader.pkl", "wb") as f:
+        #  pickle.dump(test_loader, f)
 
     #  return
 
