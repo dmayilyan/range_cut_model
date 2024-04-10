@@ -49,6 +49,7 @@ def mark_for_write(func: Callable) -> Callable:
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
+    print(cfg)
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
@@ -69,7 +70,7 @@ def main(
         device=device
     )
     model.eval()
-    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=1e-5)
+    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=cfg.params.weight_decay)
 
     train_loader = create_dataloader(
         root_path=cfg.files.root_path,

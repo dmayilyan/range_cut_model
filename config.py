@@ -13,6 +13,7 @@ class Files:
 @dataclass
 class Params:
     epoch_count: int
+    weight_decay: float
     hidden_count: int
     learning_rate: float
 

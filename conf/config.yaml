@@ -4,5 +4,6 @@ files:
   train_sharp: e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5
 params:
   epoch_count: 100
+  weight_decay: 1e-5
   hidden_count: 9
   learning_rate: 0.0001
