@@ -5,6 +5,7 @@ from sqlite3 import Cursor, connect
 
 import hydra
 import numpy as np
+import torch
 from hydra.core.config_store import ConfigStore
 from torch import optim
 from torch.utils.data import random_split
@@ -45,7 +46,7 @@ def mark_for_write(func: Callable) -> Callable:
 
 # log writing needs refactoring
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
-@mark_for_write
+#  @mark_for_write
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
@@ -53,9 +54,9 @@ def main(
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
-    db_cur.execute(
-        f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
-    )
+    #  db_cur.execute(
+    #  f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+    #  )
 
     main_dict = OmegaConf.to_object(cfg)
 
@@ -70,7 +71,10 @@ def main(
         device=device
     )
     model.eval()
-    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=cfg.params.weight_decay)
+    #  optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=cfg.params.weight_decay)
+    optimizer = optim.Adam(
+        model.parameters(), lr=cfg.params.learning_rate, weight_decay=0.001
+    )
 
     train_loader = create_dataloader(
         root_path=cfg.files.root_path,
@@ -88,20 +92,20 @@ def main(
     )
 
     #  with open("train_loader.pkl", "wb") as f:
-        #  pickle.dump(train_loader, f)
+    #  pickle.dump(train_loader, f)
 
     #  with open("test_loader.pkl", "wb") as f:
-        #  pickle.dump(test_loader, f)
+    #  pickle.dump(test_loader, f)
 
     #  return
 
     #  with open("train_loader.pkl", "rb") as f:
-        #  logging.info("Reading train_loader from a pickle.")
-        #  train_loader = pickle.load(f)
+    #  logging.info("Reading train_loader from a pickle.")
+    #  train_loader = pickle.load(f)
 
     #  with open("test_loader.pkl", "rb") as f:
-        #  logging.info("Reading test_loader from a pickle.")
-        #  test_loader = pickle.load(f)
+    #  logging.info("Reading test_loader from a pickle.")
+    #  test_loader = pickle.load(f)
 
     criterion = Loss()
     criterion.to(device)
@@ -173,13 +177,15 @@ def main(
         #  print("test i", i, test_loss)
         test_losses[epoch] = test_loss
 
-        db_cur.execute(
-            f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
-            values + (epoch, train_loss, test_loss),
-        )
+        #  db_cur.execute(
+        #  f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
+        #  values + (epoch, train_loss, test_loss),
+        #  )
         logger.info(
             "epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss
         )
+
+    torch.save(model.state_dict(), "./main.torch")
 
 
 if __name__ == "__main__":
