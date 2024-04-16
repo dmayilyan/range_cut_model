@@ -25,8 +25,8 @@ class CaloData(Dataset[Any]):
 
         self.transform = transform
 
-        self.data_noisy = torch.sqrt(self.data_noisy)
-        self.data_sharp = torch.sqrt(self.data_sharp)
+        self.data_noisy = torch.log(self.data_noisy + 1)
+        self.data_sharp = torch.log(self.data_sharp + 1)
 
         mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
         std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
@@ -110,7 +110,7 @@ def create_dataloader(
     return DataLoader(
         CaloData(data_noisy, data_sharp, transform),
         sampler=sampler,
-        batch_size=2,
+        #  batch_size=2,
         num_workers=2,
     )
 

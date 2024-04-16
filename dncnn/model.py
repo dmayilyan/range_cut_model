@@ -62,4 +62,4 @@ class Loss(nn.Module):
         super(Loss, self).__init__()
 
     def forward(self, output: torch.Tensor, target: torch.Tensor):
-        return torch.max(f.l1_loss(output, target))
+        return f.l1_loss(output, target)

@@ -46,7 +46,7 @@ def mark_for_write(func: Callable) -> Callable:
 
 # log writing needs refactoring
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
-#  @mark_for_write
+@mark_for_write
 def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
@@ -54,9 +54,9 @@ def main(
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
-    #  db_cur.execute(
-    #  f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
-    #  )
+    db_cur.execute(
+    f"CREATE TABLE IF NOT EXISTS {LogConfig.__name__} ({fields_str}, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+    )
 
     main_dict = OmegaConf.to_object(cfg)
 
@@ -67,7 +67,7 @@ def main(
 
     device = get_device()
 
-    model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=3).to(
+    model = DnCNN(number_of_layers=cfg.params.hidden_count, kernel_size=cfg.params.kernel_size).to(
         device=device
     )
     model.eval()
@@ -177,10 +177,10 @@ def main(
         #  print("test i", i, test_loss)
         test_losses[epoch] = test_loss
 
-        #  db_cur.execute(
-        #  f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
-        #  values + (epoch, train_loss, test_loss),
-        #  )
+        db_cur.execute(
+        f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
+        values + (epoch, train_loss, test_loss),
+        )
         logger.info(
             "epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss
         )
