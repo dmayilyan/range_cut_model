@@ -1,4 +1,5 @@
 import logging
+from uuid import uuid4
 import pickle
 from functools import wraps
 from sqlite3 import Cursor, connect
@@ -51,6 +52,7 @@ def main(
     cfg: DnCNNConfig, db_name: str | None = None, db_cur: Cursor | None = None
 ) -> None:
     print(cfg)
+
     field_dict = {}
     get_fields(LogConfig, field_dict)
     fields_str = ", ".join(f"{colval[0]} {colval[1]}" for colval in field_dict.items())
@@ -59,6 +61,7 @@ def main(
     )
 
     main_dict = OmegaConf.to_object(cfg)
+    print(type(main_dict), main_dict)
 
     flattened_main_dict = flatten_dict(main_dict)
     columns, values = flattened_main_dict.keys(), flattened_main_dict.values()
@@ -110,7 +113,9 @@ def main(
     criterion = Loss()
     criterion.to(device)
 
-    columns += ["epoch", "train_loss", "test_loss"]
+    run_id = uuid4().fields[-1]
+    logger.info("Run id %s", str(run_id))
+    columns += ["run_id", "epoch", "train_loss", "test_loss"]
     training_losses = np.zeros(cfg.params.epoch_count)
     test_losses = np.zeros(cfg.params.epoch_count)
     for epoch in range(cfg.params.epoch_count):
@@ -123,21 +128,6 @@ def main(
             model.zero_grad()
 
             data_cut_big, data_cut_small = data
-            #  print("main loop", data_cut_big.shape)
-            #  print(f"{np.mean(data_cut_big.flatten().tolist())=}")
-            #  print(f"{np.std(data_cut_big.flatten().tolist())=}")
-
-            #  print("data_shape", data_cut_big.shape)
-            #  print("data_shape", data_cut_small.shape)
-            #  print(type(data[0]), type(data[1]))
-            #  print(data_cut_big.shape)
-            #  print(data_cut_small.shape)
-            #  print("data prints")
-            #  train_max_b.append(max(data_cut_big))
-            #  train_max_s.append(max(data_cut_small))
-
-            #  logging.info(data_cut_big.shape)
-            #  logging.info(data_cut_small.shape)
 
             output = model((data_cut_big.float().to(device)))
             #  # plt.matshow(output[0].to("cpu").detach().numpy())
@@ -178,14 +168,14 @@ def main(
         test_losses[epoch] = test_loss
 
         db_cur.execute(
-        f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (epoch, train_loss, test_loss)))})""",
-        values + (epoch, train_loss, test_loss),
+        f"""INSERT INTO {LogConfig.__name__} ({", ".join(columns)}) VALUES ({','.join('?'*len(values + (run_id, epoch, train_loss, test_loss)))})""",
+        values + (run_id, epoch, train_loss, test_loss),
         )
         logger.info(
-            "epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss
+            "epoch %3d: train_loss: %f, test_loss: %f", epoch, train_loss, test_loss,
         )
 
-    torch.save(model.state_dict(), "./main.torch")
+    torch.save(model.state_dict(), f"./models/{run_id}.torch")
 
 
 if __name__ == "__main__":

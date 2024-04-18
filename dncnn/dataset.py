@@ -1,4 +1,5 @@
 import logging
+import random
 from pathlib import Path
 from typing import Any
 
@@ -25,8 +26,8 @@ class CaloData(Dataset[Any]):
 
         self.transform = transform
 
-        self.data_noisy = torch.log(self.data_noisy + 1)
-        self.data_sharp = torch.log(self.data_sharp + 1)
+        self.data_noisy = torch.sqrt(self.data_noisy)
+        self.data_sharp = torch.sqrt(self.data_sharp)
 
         mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
         std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
@@ -57,29 +58,18 @@ class CaloData(Dataset[Any]):
         return len(self.data_noisy)
 
     def __getitem__(self, idx):
-        #  print("normalized",
-        #  self.data_noisy.shape,
-        #  torch.mean(self.data_noisy, dim=(1, 2, 3)),
-        #  torch.mean(self.data_noisy, dim=(1, 2, 3)).shape)
-
-        #  print("sum shape",
-        #  torch.sum(self.data_noisy, dim=3).shape)
-
-        #  logger.info(f"data_noisy: {self.data_noisy.shape}")
-
         randint = np.random.randint(0, 4)
-        #  logger.info("Rotating %d times", randint)
-        data_rotflipped = torch.rot90(
+        data_rotflipped_noisy = torch.rot90(
             self.data_noisy[idx, :, :], k=randint, dims=[0, 1]
         )
+        data_rotflipped_sharp = torch.rot90(
+            self.data_sharp[idx, :, :], k=randint, dims=[0, 1]
+        )
         if torch.rand(1).round():
-            data_rotflipped = torch.fliplr(data_rotflipped)
+            data_rotflipped_noisy = torch.fliplr(data_rotflipped_noisy)
+            data_rotflipped_sharp = torch.fliplr(data_rotflipped_sharp)
 
-        return data_rotflipped, self.data_sharp[idx, :, :]
-        #  else:
-        #  logger.error("Transform was not specified.")
-
-    #  def _prepare_transformations(self, data_noisy, data_sharp):
+        return data_rotflipped_noisy, data_rotflipped_sharp
 
 
 def create_dataloader(
@@ -97,8 +87,13 @@ def create_dataloader(
     data_noisy, data_sharp = slice_to_shortest(data_noisy, data_sharp)
     dataset = CaloData(data_noisy, data_sharp, transform)
 
+
     tt_split = int(0.75 * len(dataset))
-    indices = list(range(len(dataset)))
+    #  indices = list(range(len(dataset)))
+    random.seed(42)
+
+    indices = random.sample(range(len(dataset)), len(dataset))
+    print(indices[:5])
 
     if is_train:
         indices = indices[:tt_split]
@@ -126,30 +121,10 @@ if __name__ == "__main__":
         file_path_sharp="e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5",
         is_train=False,
     )
-    print("Have read the file now")
-    vals = []
-    for i, val in enumerate(train_loader):
-        if i >= 10:
-            break
 
-        a, b = val
-        #  a, b = a.squeeze(), b.squeeze()
-        #  print(a.size())
-        #  print(b.size())
-
-        vals += a.flatten().tolist()
-        #  print(a.flatten().tolist())
-        print(i, a.flatten().min())
-
-    print(vals)
-    with open("list_out", "w") as f:
-        f.writelines(",".join([str(i) for i in vals]))
-    import matplotlib.pyplot as plt
-
-    plt.hist(np.mean(vals), bins=np.arange(-0.1, 0.1, 0.001))
-    #  plt.semilogy()
-    plt.savefig("test.png")
-    #  plt.figure()
-    #  plt.hist(np.log(vals))
-    #  plt.semilogy()
-    #  plt.savefig("test_log.png")
+    train_loader = create_dataloader(
+        root_path="../ILDCaloSim",
+        file_path_noisy="e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5",
+        file_path_sharp="e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5",
+        is_train=True,
+    )
