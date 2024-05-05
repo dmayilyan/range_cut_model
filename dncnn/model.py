@@ -60,6 +60,26 @@ class DnCNN(torch.nn.Module):
 class Loss(nn.Module):
     def __init__(self):
         super(Loss, self).__init__()
+        size = 30  # Size of the matrix
+        sigma = 60   # Standard deviation of the Gaussian
+        self.weight_kernel = self.gaussian_2d(size, sigma).to("cuda")
+
+    def gaussian_2d(self, size, sigma=1):
+        # Create a grid
+        x = torch.arange(size, dtype=torch.float32)
+        y = torch.arange(size, dtype=torch.float32)
+        x, y = torch.meshgrid(x, y)
+        x = x - (size - 1) / 2
+        y = y - (size - 1) / 2
+
+        # Create Gaussian distribution
+        gaussian = torch.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
+
+        # Normalize the distribution
+        # gaussian = gaussian / gaussian.sum()
+
+        return gaussian
+
 
     def forward(self, output: torch.Tensor, target: torch.Tensor):
-        return f.l1_loss(output, target)
+        return f.l1_loss(self.weight_kernel * output, self.weight_kernel * target)
