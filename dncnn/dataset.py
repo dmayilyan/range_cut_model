@@ -26,17 +26,17 @@ class CaloData(Dataset[Any]):
 
         self.transform = transform
 
-        self.data_noisy = torch.sqrt(self.data_noisy)
-        self.data_sharp = torch.sqrt(self.data_sharp)
+        #  self.data_noisy = torch.sqrt(self.data_noisy)
+        #  self.data_sharp = torch.sqrt(self.data_sharp)
 
-        mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
-        std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
-        #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
-        self.data_noisy = (self.data_noisy - mean_noisy) / std_noisy
+        #  mean_noisy = torch.mean(self.data_noisy, dim=(1, 2, 3), keepdim=True)
+        #  std_noisy = torch.std(self.data_noisy, dim=(1, 2, 3), keepdim=True)
+        #  #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
+        #  self.data_noisy = (self.data_noisy - mean_noisy) / std_noisy
 
-        mean_sharp = torch.mean(self.data_sharp, dim=(1, 2, 3), keepdim=True)
-        std_sharp = torch.std(self.data_sharp, dim=(1, 2, 3), keepdim=True)
-        self.data_sharp = (self.data_sharp - mean_sharp) / std_noisy
+        #  mean_sharp = torch.mean(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+        #  std_sharp = torch.std(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+        #  self.data_sharp = (self.data_sharp - mean_sharp) / std_noisy
 
         #  logger.info(f"data_noisy before sum: {self.data_noisy}")
 
@@ -70,6 +70,7 @@ class CaloData(Dataset[Any]):
             data_rotflipped_sharp = torch.fliplr(data_rotflipped_sharp)
 
         return data_rotflipped_noisy, data_rotflipped_sharp
+        #  return self.data_noisy[idx, :, :], self.data_sharp[idx, :, :]
 
 
 def create_dataloader(
@@ -93,7 +94,6 @@ def create_dataloader(
     random.seed(42)
 
     indices = random.sample(range(len(dataset)), len(dataset))
-    print(indices[:5])
 
     if is_train:
         indices = indices[:tt_split]

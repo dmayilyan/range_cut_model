@@ -74,10 +74,7 @@ def main(
         device=device
     )
     model.eval()
-    #  optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=cfg.params.weight_decay)
-    optimizer = optim.Adam(
-        model.parameters(), lr=cfg.params.learning_rate, weight_decay=0.001
-    )
+    optimizer = optim.Adam(model.parameters(), lr=cfg.params.learning_rate, weight_decay=cfg.params.weight_decay)
 
     train_loader = create_dataloader(
         root_path=cfg.files.root_path,
