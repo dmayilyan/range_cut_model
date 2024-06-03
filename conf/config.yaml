@@ -1,7 +1,7 @@
 files:
   root_path: ../ILDCaloSim
   train_noisy: e-_Jun3/test/showers-10kE10GeV-RC10-1.hdf5
-  train_sharp: e-_Jun3/test/showers-10kE10GeV-RC01-1.hdf5
+  train_sharp: e-_Jun3/test/showers-10kE10GeV-RC2-1.hdf5
 params:
   epoch_count: 200
   weight_decay: 0.001

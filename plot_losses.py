@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # Connect to the SQLite database
 conn = sqlite3.connect('log.db')
-QUERY = """select epoch, train_loss, test_loss from LogConfig where run_id = 212016045419449;"""
+QUERY = """select epoch, train_loss, test_loss from LogConfig where run_id = 226041554964575;"""
 
 data = pd.read_sql(QUERY, conn)
 print(data)

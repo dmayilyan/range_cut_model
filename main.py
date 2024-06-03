@@ -116,6 +116,7 @@ def main(
     training_losses = np.zeros(cfg.params.epoch_count)
     test_losses = np.zeros(cfg.params.epoch_count)
     for epoch in range(cfg.params.epoch_count):
+
         train_loss = 0
         train_max_s = []
         train_max_b = []
@@ -124,13 +125,24 @@ def main(
             model.train()
             model.zero_grad()
 
-            data_cut_big, data_cut_small = data
+            data_cut_big, data_cut_small, mean, std = data
+            #  if i == 0:
+                #  print(f"{mean=}, {std=}")
 
+            optimizer.zero_grad()
             output = model((data_cut_big.float().to(device)))
             #  # plt.matshow(output[0].to("cpu").detach().numpy())
             #  # plt.colorbar()
-            #  # display(output.size())
             #  # display(output.squeeze((0, 1, 2)).size)
+
+            #  if i == 0:
+                #  print(output)
+                #  print(std, mean)
+
+            #  output = torch.square(output)
+            output = output * std.to(device) + mean.to(device)
+            #  if i == 0:
+                #  print(output)
             batch_loss = criterion(output.to(device), data_cut_small.to(device)).to(
                 device
             )
@@ -149,12 +161,14 @@ def main(
 
         test_loss = 0
         for i, data in enumerate(test_loader):
-            data_cut_big, data_cut_small = data
+            data_cut_big, data_cut_small, mean, std = data
 
             #  logging.info("test data_cut big", data_cut_big.shape)
             #  logging.info("data_cut_small", data_cut_small.shape)
 
             output = model((data_cut_big.float().to(device)))
+            #  output = torch.square(output)
+            output = output * std.to(device) + mean.to(device)
             batch_loss = criterion(output.to(device), data_cut_small.to(device)).to(
                 device
             )

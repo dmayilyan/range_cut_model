@@ -21,21 +21,23 @@ from scipy.stats import yeojohnson
 
 class CaloData(Dataset[Any]):
     def __init__(self, data_noisy: np.ndarray, data_sharp: np.ndarray, transform=None):
-        self.data_noisy = torch.from_numpy(data_noisy)
         self.data_sharp = torch.from_numpy(data_sharp)
 
-        self.data_noisy = torch.sum(self.data_noisy, dim=3)
         self.data_sharp = torch.sum(self.data_sharp, dim=3)
-        #  print(self.data_noisy.shape)
 
         self.transform = transform
 
         #  self.data_noisy = torch.sqrt(self.data_noisy)
         #  self.data_sharp = torch.sqrt(self.data_sharp)
 
-        self.mean_noisy = torch.mean(self.data_noisy, dim=(1, 2), keepdim=True)
-        self.std_noisy = torch.std(self.data_noisy, dim=(1, 2), keepdim=True)
-        self.data_noisy = (self.data_noisy - self.mean_noisy) / self.std_noisy
+        mins_sharp = torch.amin(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+        maxes_sharp = torch.amax(self.data_sharp, dim=(1, 2, 3), keepdim=True)
+
+        self.data_sharp = (self.data_sharp - mins)/(maxes-mins)
+
+        #  self.mean_noisy = torch.mean(self.data_noisy, dim=(1, 2), keepdim=True)
+        #  self.std_noisy = torch.std(self.data_noisy, dim=(1, 2), keepdim=True)
+        #  self.data_noisy = (self.data_noisy - self.mean_noisy) / self.std_noisy
 
         #  print(mean_noisy.shape)
         #  #  print(f"{mean_noisy.shape=} {std_noisy.shape=}")
@@ -58,36 +60,12 @@ class CaloData(Dataset[Any]):
         #  print(f"{mean_sharp.shape=} {std_sharp.shape=}")
 
     def __len__(self):
-        logger.warning("DEBUG data")
+        #  logger.warning("DEBUG data")
         # Needs to be address, currently non-functional
         return len(self.data_noisy)# // 18
 
     def __getitem__(self, idx):
-        randint = np.random.randint(0, 4)
-        data_rotflipped_noisy = torch.rot90(
-            self.data_noisy[idx, :, :], k=randint, dims=[0, 1]
-        )
-        #  data_rotflipped_sharp = torch.rot90(
-            #  self.data_sharp[idx, :, :], k=randint, dims=[0, 1]
-        #  )
-        if torch.rand(1).round():
-            data_rotflipped_noisy = torch.fliplr(data_rotflipped_noisy)
-            #  data_rotflipped_sharp = torch.fliplr(data_rotflipped_sharp)
-
-        #  return  self.data_noisy[idx, :, :], self.data_sharp[idx, :, :], self.mean_noisy[idx], self.std_noisy[idx]
-        #  return data_rotflipped_noisy, self.data_sharp[idx, :, :], self.mean_noisy[idx], self.std_noisy[idx]
-        return self.data_noisy[idx, :, :], self.data_sharp[idx, :, :], self.mean_noisy[idx], self.std_noisy[idx]
-        #  return self.data_noisy[idx, :, :], self.data_sharp[idx, :, :]
-
-    def standardize(self):
-        self.mean_noisy = torch.mean(self.data_noisy, dim=(1, 2), keepdim=True)
-        self.std_noisy = torch.std(self.data_noisy, dim=(1, 2), keepdim=True)
-        self.data_noisy = (self.data_noisy - self.mean_noisy) / self.std_noisy
-
-
-    def undo_transform(self, idx):
-        return self.data_noisy[idx, :, :] * self.std_noisy[idx] + self.mean_noisy[idx]
-
+        return self.data_sharp[idx, :, :, :]
 
 def create_dataloader(
     root_path: str,
