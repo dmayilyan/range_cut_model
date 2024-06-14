@@ -1,4 +1,15 @@
 from wgan.dataset import create_dataloader
+from torch import optim
+from dncnn.utils import get_device
+
+EPOCHS = 100
+BATCH_SIE = 2
+
+device = get_device()
+
+def initial_z():
+    Z = torch.Tensor(batch_size, 200, requires_grad=True).normal_(0, 1)
+    return Z
 
 
 def main():
@@ -16,6 +27,30 @@ def main():
         is_train=False,
         transform=train_loader.dataset.transform,
     )
+
+    D = Discriminator()
+    G = Generator()
+    D_optimizer = optim.Adam(D.parameters(), lr=0.00005, betas=(0.5, 0.5))
+    G_optimizer = optim.Adam(G.parameters(), lr=0.0025, betas=(0.5, 0.5))
+
+    one = torch.FloatTensor([1]).to(device)
+    mone = one * -1
+    #  mone = mone.cuda()
+    #  one = one.cuda()
+    D.to(device)
+    G.to(device)
+
+    criterion = nn.BCELoss()
+
+    for epoch in range(EPOCHS):
+        for i, data in enumerate(train_loader):
+            Z = initial_z().to(device)
+
+            real_labels = torch.ones(batch_size, requires_grad=True).to(device)
+            fake_labels = torch.zeros(batch_size, requires_grad=True).to(device)
+
+            D.zero_grad()
+            G.zero_grad()
 
 
 if __name__ == "__main__":
