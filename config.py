@@ -22,10 +22,13 @@ class DnCNNConfig:
     files: Files
     params: Params
 
+@dataclass
+class WGANConfig:
+    files: Files
 
 @dataclass
 class LogConfig:
-    run_id: int 
+    run_id: int
     train_loss: float
     test_loss: float
     epoch: int
