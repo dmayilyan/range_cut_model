@@ -44,10 +44,10 @@ class Discriminator(nn.Module):
         )
         layers.append(nn.Sigmoid())
 
-        self.wgan = nn.Sequential(*layers)
+        self.wgan_d = nn.Sequential(*layers)
 
-        def forward(self, x) -> torch.Tensor:
-            return self.wgan_d(x)
+    def forward(self, x) -> torch.Tensor:
+        return self.wgan_d(x)
 
 
 class Generator(nn.Module):

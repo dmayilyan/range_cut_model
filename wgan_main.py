@@ -1,13 +1,15 @@
 from wgan.dataset import create_dataloader
-from torch import optim
+import torch
+from torch import optim, nn
 from dncnn.utils import get_device
 import hydra
 from config import WGANConfig as cfg
 from hydra.core.config_store import ConfigStore
 from config import WGANConfig
+from wgan.model import Discriminator, Generator
 
 EPOCHS = 100
-BATCH_SIE = 2
+BATCH_SIZE = 2
 
 device = get_device()
 
@@ -16,7 +18,8 @@ cs.store(name="config_scheme", node=WGANConfig)
 
 
 def initial_z():
-    Z = torch.Tensor(batch_size, 200, requires_grad=True).normal_(0, 1)
+    Z = torch.Tensor(BATCH_SIZE, 200).normal_(0, 1)
+    Z.requires_grad_(True)
     return Z
 
 
@@ -44,7 +47,7 @@ def main(cfg: WGANConfig) -> None:
 
     one = torch.FloatTensor([1]).to(device)
     mone = one * -1
-    #  mone = mone.cuda()
+    mone = mone.to(device)
     #  one = one.cuda()
     D.to(device)
     G.to(device)
@@ -55,12 +58,12 @@ def main(cfg: WGANConfig) -> None:
         for i, data in enumerate(train_loader):
             Z = initial_z().to(device)
 
-            real_labels = torch.ones(batch_size, requires_grad=True).to(device)
-            fake_labels = torch.zeros(batch_size, requires_grad=True).to(device)
+            real_labels = torch.ones(BATCH_SIZE, requires_grad=True).to(device)
+            fake_labels = torch.zeros(BATCH_SIZE, requires_grad=True).to(device)
 
             D.zero_grad()
             G.zero_grad()
-
+            d_real = D(data)
             d_real = d_real.mean()
             d_real.backward(mone)
 

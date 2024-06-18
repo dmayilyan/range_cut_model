@@ -23,17 +23,18 @@ class CaloData(Dataset[Any]):
     def __init__(self, data_noisy: np.ndarray, data_sharp: np.ndarray, transform=None):
         self.data_sharp = torch.from_numpy(data_sharp)
 
-        self.data_sharp = torch.sum(self.data_sharp, dim=3)
+        #  self.data_sharp = torch.sum(self.data_sharp, dim=3)
 
         self.transform = transform
 
         #  self.data_noisy = torch.sqrt(self.data_noisy)
         #  self.data_sharp = torch.sqrt(self.data_sharp)
 
+        print(self.data_sharp.shape)
         mins_sharp = torch.amin(self.data_sharp, dim=(1, 2, 3), keepdim=True)
         maxes_sharp = torch.amax(self.data_sharp, dim=(1, 2, 3), keepdim=True)
 
-        self.data_sharp = (self.data_sharp - mins)/(maxes-mins)
+        self.data_sharp = (self.data_sharp - mins_sharp)/(maxes_sharp-mins_sharp)
 
         #  self.mean_noisy = torch.mean(self.data_noisy, dim=(1, 2), keepdim=True)
         #  self.std_noisy = torch.std(self.data_noisy, dim=(1, 2), keepdim=True)
@@ -62,7 +63,7 @@ class CaloData(Dataset[Any]):
     def __len__(self):
         #  logger.warning("DEBUG data")
         # Needs to be address, currently non-functional
-        return len(self.data_noisy)# // 18
+        return len(self.data_sharp)# // 18
 
     def __getitem__(self, idx):
         return self.data_sharp[idx, :, :, :]
