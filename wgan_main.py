@@ -63,7 +63,7 @@ def main(cfg: WGANConfig) -> None:
 
             D.zero_grad()
             G.zero_grad()
-            d_real = D(data)
+            d_real = D(data.float().to(device))
             d_real = d_real.mean()
             d_real.backward(mone)
 
