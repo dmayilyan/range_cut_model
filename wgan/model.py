@@ -34,7 +34,9 @@ class Discriminator(nn.Module):
                     padding=(1, 1, 1),
                 )
             )
+            print(i, "Before BatchNorm")
             layers.append(nn.BatchNorm3d(self.data_len * 2 * (2**i)))
+            print(i, "After BatchNorm")
             layers.append(nn.LeakyReLU(alpha))
 
         layers.append(

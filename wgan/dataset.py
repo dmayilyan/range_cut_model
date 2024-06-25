@@ -100,7 +100,7 @@ def create_dataloader(
     return DataLoader(
         CaloData(data_noisy, data_sharp, transform),
         sampler=sampler,
-        #  batch_size=2,
+        batch_size=32,
         num_workers=2,
     )
 
